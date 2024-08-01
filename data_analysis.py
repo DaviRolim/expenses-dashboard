@@ -80,6 +80,5 @@ def analyze_all_reports(reports_dir):
     
     # Get top 10 most expensive purchases from all files
     top_10_purchases = all_purchases.nlargest(10, 'amount')[['date', 'amount', 'title']]
-    result['top_10_purchases'] = [top_10_purchases] * len(result)
     
-    return result
+    return result, top_10_purchases

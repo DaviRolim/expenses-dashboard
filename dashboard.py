@@ -6,20 +6,17 @@ import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime
 
-def create_dashboard(data):
+def create_dashboard(data, top_10_purchases):
     """
     Create an interactive dashboard using the analyzed data.
     
     Args:
     data (pd.DataFrame): Analyzed data to be displayed.
+    top_10_purchases (pd.DataFrame): Top 10 most expensive purchases.
     """
     # Sort the data by month
     data['month'] = pd.to_datetime(data['month'])
     data = data.sort_values('month')
-
-    # Prepare data for top 10 purchases
-    top_10_purchases = pd.concat([df for df in data['top_10_purchases']])
-    top_10_purchases = top_10_purchases.nlargest(10, 'amount')
 
     app = dash.Dash(__name__)
 
@@ -51,14 +48,16 @@ def create_dashboard(data):
         monthly_fig.update_xaxes(tickformat="%Y-%m")
         
         # Top 10 purchases graph
-        top_10_purchases = pd.concat([df for df in filtered_data['top_10_purchases']])
-        top_10_purchases = top_10_purchases.nlargest(10, 'amount')
+        filtered_top_10 = top_10_purchases[
+            (top_10_purchases['date'] >= start_date) & 
+            (top_10_purchases['date'] <= end_date)
+        ]
         
         top_10_fig = go.Figure()
         top_10_fig.add_trace(go.Bar(
-            x=top_10_purchases['amount'],
-            y=top_10_purchases['title'],
-            text=top_10_purchases['date'].dt.strftime('%Y-%m-%d'),
+            x=filtered_top_10['amount'],
+            y=filtered_top_10['title'],
+            text=filtered_top_10['date'].dt.strftime('%Y-%m-%d'),
             orientation='h'
         ))
         
