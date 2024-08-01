@@ -22,7 +22,10 @@ def analyze_report(file_path):
     total_amount = df['amount'].sum()
     
     # Get top 10 most expensive purchases
-    top_10_purchases = df.nlargest(10, 'amount')[['date', 'description', 'amount']]
+    columns_to_select = ['date', 'amount']
+    if 'description' in df.columns:
+        columns_to_select.append('description')
+    top_10_purchases = df.nlargest(10, 'amount')[columns_to_select]
     
     return year_month, total_amount, top_10_purchases
 

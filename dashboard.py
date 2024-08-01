@@ -42,16 +42,28 @@ def create_dashboard(data):
         Input('top-10-purchases-graph', 'relayoutData')
     )
     def update_top_10_graph(relayout_data):
-        fig = go.Figure(data=[go.Bar(
-            x=top_10_purchases['amount'],
-            y=top_10_purchases['description'],
-            orientation='h'
-        )])
+        fig = go.Figure()
+        
+        if 'description' in top_10_purchases.columns:
+            fig.add_trace(go.Bar(
+                x=top_10_purchases['amount'],
+                y=top_10_purchases['description'],
+                orientation='h'
+            ))
+            y_axis_title = 'Description'
+        else:
+            fig.add_trace(go.Bar(
+                x=top_10_purchases['amount'],
+                y=top_10_purchases['date'].astype(str),
+                orientation='h'
+            ))
+            y_axis_title = 'Date'
+        
         fig.update_layout(
             title='Top 10 Most Expensive Purchases',
             yaxis={'categoryorder':'total ascending'},
             xaxis_title='Amount',
-            yaxis_title='Description'
+            yaxis_title=y_axis_title
         )
         return fig
 
