@@ -78,8 +78,16 @@ def create_dashboard(data, top_10_purchases):
         # Generate monthly top 5 expenses charts
         monthly_top_5_charts = []
         for month in pd.to_datetime(selected_months):
-            month_data = top_10_purchases[top_10_purchases['date'].dt.to_period('M') == month.to_period('M')]
+            month_data = filtered_top_10[filtered_top_10['date'].dt.to_period('M') == month.to_period('M')]
             top_5_expenses = month_data.nlargest(5, 'amount')
+            
+            # If there are fewer than 5 expenses, pad the dataframe
+            if len(top_5_expenses) < 5:
+                padding = pd.DataFrame({
+                    'amount': [0] * (5 - len(top_5_expenses)),
+                    'title': [''] * (5 - len(top_5_expenses))
+                })
+                top_5_expenses = pd.concat([top_5_expenses, padding]).reset_index(drop=True)
             
             fig = go.Figure()
             fig.add_trace(go.Bar(
