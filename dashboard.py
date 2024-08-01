@@ -42,29 +42,25 @@ def create_dashboard(data):
         Input('top-10-purchases-graph', 'relayoutData')
     )
     def update_top_10_graph(relayout_data):
+        top_10_purchases = data['top_10_purchases'].iloc[0]
         fig = go.Figure()
         
-        if 'description' in top_10_purchases.columns:
-            fig.add_trace(go.Bar(
-                x=top_10_purchases['amount'],
-                y=top_10_purchases['description'],
-                orientation='h'
-            ))
-            y_axis_title = 'Description'
-        else:
-            fig.add_trace(go.Bar(
-                x=top_10_purchases['amount'],
-                y=top_10_purchases['date'].astype(str),
-                orientation='h'
-            ))
-            y_axis_title = 'Date'
+        fig.add_trace(go.Bar(
+            x=top_10_purchases['amount'],
+            y=top_10_purchases['description'],
+            text=top_10_purchases['date'].dt.strftime('%Y-%m-%d'),
+            orientation='h'
+        ))
         
+        fig.update_traces(textposition='inside')
         fig.update_layout(
             title='Top 10 Most Expensive Purchases',
             yaxis={'categoryorder':'total ascending'},
             xaxis_title='Amount',
-            yaxis_title=y_axis_title
+            yaxis_title='Description'
         )
         return fig
 
-    app.run_server(debug=True)
+    return app
+
+# Remove the app.run_server(debug=True) line from here
