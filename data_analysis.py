@@ -43,7 +43,11 @@ def analyze_all_reports(reports_dir):
     for filename in os.listdir(reports_dir):
         if filename.endswith(".csv"):
             file_path = os.path.join(reports_dir, filename)
-            month, total_amount = analyze_report(file_path)
-            data.append({'month': month, 'total_amount': total_amount})
+            month, total_amount, top_10_purchases = analyze_report(file_path)
+            data.append({
+                'month': month, 
+                'total_amount': total_amount, 
+                'top_10_purchases': top_10_purchases
+            })
     
     return pd.DataFrame(data)
