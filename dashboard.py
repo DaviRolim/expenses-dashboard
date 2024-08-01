@@ -34,6 +34,7 @@ def create_dashboard(data):
     )
     def update_graph(relayout_data):
         fig = px.bar(data, x='month', y='total_amount', title='Total Amount by Month')
+        fig.update_traces(y=abs(data['total_amount']))
         fig.update_xaxes(tickformat="%Y-%m")
         return fig
 
