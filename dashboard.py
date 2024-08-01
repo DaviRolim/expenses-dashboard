@@ -31,6 +31,7 @@ def create_dashboard(data, top_10_purchases):
             id='month-range-dropdown',
             options=month_options,
             multi=True,
+            value=[option['value'] for option in month_options],  # Select all months by default
             placeholder="Select month(s)",
         ),
         dcc.Graph(id='monthly-total-graph'),
