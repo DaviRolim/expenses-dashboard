@@ -9,7 +9,7 @@ def analyze_report(file_path):
     file_path (str): Path to the CSV file.
     
     Returns:
-    tuple: (year_month, total_amount)
+    tuple: (year_month, total_amount, top_10_purchases)
     """
     # Extract year and month from filename
     filename = os.path.splitext(os.path.basename(file_path))[0]
@@ -21,7 +21,10 @@ def analyze_report(file_path):
     # Calculate total amount
     total_amount = df['amount'].sum()
     
-    return year_month, total_amount
+    # Get top 10 most expensive purchases
+    top_10_purchases = df.nlargest(10, 'amount')[['date', 'description', 'amount']]
+    
+    return year_month, total_amount, top_10_purchases
 
 def analyze_all_reports(reports_dir):
     """
