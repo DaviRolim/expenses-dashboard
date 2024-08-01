@@ -36,11 +36,13 @@ def create_dashboard(data, top_10_purchases):
         ),
         dcc.Graph(id='monthly-total-graph'),
         dcc.Graph(id='top-10-purchases-graph'),
+        html.Div(id='monthly-top-5-expenses')
     ])
 
     @app.callback(
         [Output('monthly-total-graph', 'figure'),
-         Output('top-10-purchases-graph', 'figure')],
+         Output('top-10-purchases-graph', 'figure'),
+         Output('monthly-top-5-expenses', 'children')],
         [Input('month-range-dropdown', 'value')]
     )
     def update_graphs(selected_months):
@@ -73,7 +75,30 @@ def create_dashboard(data, top_10_purchases):
             yaxis_title='Description'
         )
         
-        return monthly_fig, top_10_fig
+        # Generate monthly top 5 expenses charts
+        monthly_top_5_charts = []
+        for month in pd.to_datetime(selected_months):
+            month_data = top_10_purchases[top_10_purchases['date'].dt.to_period('M') == month.to_period('M')]
+            top_5_expenses = month_data.nlargest(5, 'amount')
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=top_5_expenses['amount'],
+                y=top_5_expenses['title'],
+                orientation='h'
+            ))
+            fig.update_layout(
+                title=f'Top 5 Expenses for {month.strftime("%B %Y")}',
+                yaxis={'categoryorder':'total ascending'},
+                xaxis_title='Amount',
+                yaxis_title='Description',
+                height=300,
+                margin=dict(l=0, r=0, t=30, b=0)
+            )
+            
+            monthly_top_5_charts.append(dcc.Graph(figure=fig))
+        
+        return monthly_fig, top_10_fig, monthly_top_5_charts
 
     return app
 
