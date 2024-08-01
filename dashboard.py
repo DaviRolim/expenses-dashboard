@@ -14,17 +14,15 @@ def create_dashboard(data):
 
     app.layout = html.Div([
         html.H1("Financial Report Dashboard"),
-        dcc.Graph(id='main-graph'),
-        # Add more Dash components as needed
+        dcc.Graph(id='monthly-total-graph'),
     ])
 
     @app.callback(
-        Output('main-graph', 'figure'),
-        Input('main-graph', 'relayoutData')
+        Output('monthly-total-graph', 'figure'),
+        Input('monthly-total-graph', 'relayoutData')
     )
     def update_graph(relayout_data):
-        # This is a placeholder. Replace with actual graph creation logic
-        fig = px.line(data)
+        fig = px.bar(data, x='month', y='total_amount', title='Total Amount by Month')
         return fig
 
     app.run_server(debug=True)
