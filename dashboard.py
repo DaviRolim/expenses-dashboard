@@ -80,16 +80,21 @@ def create_dashboard(data, top_10_purchases, monthly_top_5):
         
         # Generate monthly top 5 expenses charts
         monthly_top_5_charts = []
-        for month, top_5_expenses in selected_monthly_top_5.items():
+        sorted_months = sorted(selected_monthly_top_5.keys(), reverse=True)
+        for month in sorted_months:
+            top_5_expenses = selected_monthly_top_5[month]
+            top_5_expenses = top_5_expenses.sort_values('amount', ascending=False)
             fig = go.Figure()
             fig.add_trace(go.Bar(
                 x=top_5_expenses['amount'],
                 y=top_5_expenses['title'],
-                orientation='h'
+                orientation='h',
+                text=top_5_expenses['amount'].round(2),
+                textposition='outside'
             ))
             fig.update_layout(
                 title=f'Top 5 Expenses for {pd.to_datetime(month).strftime("%B %Y")}',
-                yaxis={'categoryorder':'total ascending'},
+                yaxis={'categoryorder':'array', 'categoryarray': top_5_expenses['title'][::-1]},
                 xaxis_title='Amount',
                 yaxis_title='Description',
                 height=300,
