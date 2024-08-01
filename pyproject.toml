@@ -3,6 +3,10 @@ name = "financial-report-analyzer"
 version = "0.1.0"
 description = "A project to analyze financial reports and create interactive dashboards"
 authors = ["Your Name <your.email@example.com>"]
+package-mode = false
+packages = [
+    { include = "*.py" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
