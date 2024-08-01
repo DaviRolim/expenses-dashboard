@@ -22,7 +22,7 @@ def analyze_report(file_path):
     # Process installments
     def extract_installment_info(title):
         import re
-        match = re.search(r'(\d+)/(\d+)$', title)
+        match = re.search(r'\s(\d+)/(\d+)$', title)
         if match:
             current, total = map(int, match.groups())
             base_title = title[:match.start()].strip()
@@ -31,18 +31,20 @@ def analyze_report(file_path):
 
     df['base_title'], df['current_installment'], df['total_installments'] = zip(*df['title'].apply(extract_installment_info))
 
-    # Group by base_title and sum amounts for installments
-    grouped = df.groupby('base_title').agg({
-        'amount': 'sum',
-        'date': 'first',
-        'current_installment': 'max',
-        'total_installments': 'max'
-    }).reset_index()
+    # Group by base_title only for installments
+    def group_installments(group):
+        if group['total_installments'].notnull().any():
+            return pd.Series({
+                'amount': group['amount'].sum(),
+                'date': group['date'].min(),
+                'current_installment': group['current_installment'].max(),
+                'total_installments': group['total_installments'].max(),
+                'title': f"{group['base_title'].iloc[0]} {group['current_installment'].max()}/{group['total_installments'].max()}"
+            })
+        else:
+            return group.iloc[0]
 
-    # Recreate title for installments
-    grouped['title'] = grouped.apply(lambda row: 
-        f"{row['base_title']} {row['current_installment']}/{row['total_installments']}"
-        if pd.notnull(row['total_installments']) else row['base_title'], axis=1)
+    grouped = df.groupby('base_title').apply(group_installments).reset_index(drop=True)
 
     # Keep only necessary columns
     df = grouped[['date', 'title', 'amount']]
