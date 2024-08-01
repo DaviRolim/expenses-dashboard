@@ -9,7 +9,7 @@ def analyze_report(file_path):
     file_path (str): Path to the CSV file.
     
     Returns:
-    tuple: (year_month, total_amount, df)
+    tuple: (year_month, total_amount, df, top_5_expenses)
     """
     # Extract year and month from filename
     filename = os.path.splitext(os.path.basename(file_path))[0]
@@ -48,7 +48,10 @@ def analyze_report(file_path):
     # Calculate total amount
     total_amount = df['amount'].sum()
     
-    return year_month, total_amount, df
+    # Get top 5 expenses for this month
+    top_5_expenses = df.nlargest(5, 'amount')[['title', 'amount']]
+    
+    return year_month, total_amount, df, top_5_expenses
 
 def analyze_all_reports(reports_dir):
     """
@@ -58,27 +61,26 @@ def analyze_all_reports(reports_dir):
     reports_dir (str): Path to the directory containing CSV files.
     
     Returns:
-    pd.DataFrame: Processed and analyzed data for all months.
+    tuple: (pd.DataFrame, pd.DataFrame, dict)
     """
     data = []
     all_purchases = pd.DataFrame()
+    monthly_top_5 = {}
     
     for filename in os.listdir(reports_dir):
         if filename.endswith(".csv"):
             file_path = os.path.join(reports_dir, filename)
-            month, total_amount, df = analyze_report(file_path)
-            if month == '2024-04':
-                print(month, end=': ')
-                print(df)
+            month, total_amount, df, top_5 = analyze_report(file_path)
             data.append({
                 'month': month, 
                 'total_amount': total_amount
             })
             all_purchases = pd.concat([all_purchases, df])
+            monthly_top_5[month] = top_5
     
     result = pd.DataFrame(data)
     
     # Get top 10 most expensive purchases from all files
     top_10_purchases = all_purchases.nlargest(10, 'amount')[['date', 'amount', 'title']]
     
-    return result, top_10_purchases
+    return result, top_10_purchases, monthly_top_5

@@ -7,13 +7,14 @@ import plotly.graph_objs as go
 from datetime import datetime
 import calendar
 
-def create_dashboard(data, top_10_purchases):
+def create_dashboard(data, top_10_purchases, monthly_top_5):
     """
     Create an interactive dashboard using the analyzed data.
     
     Args:
     data (pd.DataFrame): Analyzed data to be displayed.
     top_10_purchases (pd.DataFrame): Top 10 most expensive purchases.
+    monthly_top_5 (dict): Dictionary containing top 5 expenses for each month.
     """
     # Sort the data by month
     data['month'] = pd.to_datetime(data['month'])
@@ -49,9 +50,11 @@ def create_dashboard(data, top_10_purchases):
         if not selected_months:
             filtered_data = data
             filtered_top_10 = top_10_purchases
+            selected_monthly_top_5 = monthly_top_5
         else:
-            filtered_data = data[data['month'].dt.strftime('%Y-%m').isin(selected_months)]
+            filtered_data = data[data['month'].isin(selected_months)]
             filtered_top_10 = top_10_purchases[top_10_purchases['date'].dt.strftime('%Y-%m').isin(selected_months)]
+            selected_monthly_top_5 = {k: v for k, v in monthly_top_5.items() if k in selected_months}
         
         # Monthly total graph
         monthly_fig = px.bar(filtered_data, x='month', y='total_amount', title='Total Amount by Month')
@@ -77,18 +80,7 @@ def create_dashboard(data, top_10_purchases):
         
         # Generate monthly top 5 expenses charts
         monthly_top_5_charts = []
-        for month in pd.to_datetime(selected_months):
-            month_data = filtered_top_10[filtered_top_10['date'].dt.to_period('M') == month.to_period('M')]
-            top_5_expenses = month_data.nlargest(5, 'amount')
-            
-            # If there are fewer than 5 expenses, pad the dataframe
-            if len(top_5_expenses) < 5:
-                padding = pd.DataFrame({
-                    'amount': [0] * (5 - len(top_5_expenses)),
-                    'title': [''] * (5 - len(top_5_expenses))
-                })
-                top_5_expenses = pd.concat([top_5_expenses, padding]).reset_index(drop=True)
-            
+        for month, top_5_expenses in selected_monthly_top_5.items():
             fig = go.Figure()
             fig.add_trace(go.Bar(
                 x=top_5_expenses['amount'],
@@ -96,7 +88,7 @@ def create_dashboard(data, top_10_purchases):
                 orientation='h'
             ))
             fig.update_layout(
-                title=f'Top 5 Expenses for {month.strftime("%B %Y")}',
+                title=f'Top 5 Expenses for {pd.to_datetime(month).strftime("%B %Y")}',
                 yaxis={'categoryorder':'total ascending'},
                 xaxis_title='Amount',
                 yaxis_title='Description',
