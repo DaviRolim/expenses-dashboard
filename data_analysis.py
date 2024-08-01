@@ -67,6 +67,9 @@ def analyze_all_reports(reports_dir):
         if filename.endswith(".csv"):
             file_path = os.path.join(reports_dir, filename)
             month, total_amount, df = analyze_report(file_path)
+            if month == '2024-04':
+                print(month, end=': ')
+                print(df)
             data.append({
                 'month': month, 
                 'total_amount': total_amount
