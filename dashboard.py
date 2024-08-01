@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import plotly.graph_objs as go
 from datetime import datetime
+import calendar
 
 def create_dashboard(data, top_10_purchases):
     """
@@ -20,14 +21,17 @@ def create_dashboard(data, top_10_purchases):
 
     app = dash.Dash(__name__)
 
+    # Create a list of month options for the dropdown
+    month_options = [{'label': f"{calendar.month_name[d.month]} {d.year}", 'value': d.strftime('%Y-%m')} 
+                     for d in data['month'].dt.to_period('M').unique()]
+
     app.layout = html.Div([
         html.H1("Financial Report Dashboard"),
-        dcc.DatePickerRange(
-            id='date-picker-range',
-            min_date_allowed=data['month'].min().date(),
-            max_date_allowed=data['month'].max().date(),
-            start_date=data['month'].min().date(),
-            end_date=data['month'].max().date(),
+        dcc.Dropdown(
+            id='month-range-dropdown',
+            options=month_options,
+            multi=True,
+            placeholder="Select month(s)",
         ),
         dcc.Graph(id='monthly-total-graph'),
         dcc.Graph(id='top-10-purchases-graph'),
@@ -36,11 +40,15 @@ def create_dashboard(data, top_10_purchases):
     @app.callback(
         [Output('monthly-total-graph', 'figure'),
          Output('top-10-purchases-graph', 'figure')],
-        [Input('date-picker-range', 'start_date'),
-         Input('date-picker-range', 'end_date')]
+        [Input('month-range-dropdown', 'value')]
     )
-    def update_graphs(start_date, end_date):
-        filtered_data = data[(data['month'] >= start_date) & (data['month'] <= end_date)]
+    def update_graphs(selected_months):
+        if not selected_months:
+            filtered_data = data
+            filtered_top_10 = top_10_purchases
+        else:
+            filtered_data = data[data['month'].dt.strftime('%Y-%m').isin(selected_months)]
+            filtered_top_10 = top_10_purchases[top_10_purchases['date'].dt.strftime('%Y-%m').isin(selected_months)]
         
         # Monthly total graph
         monthly_fig = px.bar(filtered_data, x='month', y='total_amount', title='Total Amount by Month')
@@ -48,11 +56,6 @@ def create_dashboard(data, top_10_purchases):
         monthly_fig.update_xaxes(tickformat="%Y-%m")
         
         # Top 10 purchases graph
-        filtered_top_10 = top_10_purchases[
-            (top_10_purchases['date'] >= start_date) & 
-            (top_10_purchases['date'] <= end_date)
-        ]
-        
         top_10_fig = go.Figure()
         top_10_fig.add_trace(go.Bar(
             x=filtered_top_10['amount'],
