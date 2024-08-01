@@ -3,6 +3,7 @@ import pandas as pd
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import plotly.graph_objs as go
 
 def create_dashboard(data):
     """
@@ -15,11 +16,16 @@ def create_dashboard(data):
     data['month'] = pd.to_datetime(data['month'])
     data = data.sort_values('month')
 
+    # Prepare data for top 10 purchases
+    top_10_purchases = pd.concat([df for df in data['top_10_purchases']])
+    top_10_purchases = top_10_purchases.nlargest(10, 'amount')
+
     app = dash.Dash(__name__)
 
     app.layout = html.Div([
         html.H1("Financial Report Dashboard"),
         dcc.Graph(id='monthly-total-graph'),
+        dcc.Graph(id='top-10-purchases-graph'),
     ])
 
     @app.callback(
@@ -29,6 +35,24 @@ def create_dashboard(data):
     def update_graph(relayout_data):
         fig = px.bar(data, x='month', y='total_amount', title='Total Amount by Month')
         fig.update_xaxes(tickformat="%Y-%m")
+        return fig
+
+    @app.callback(
+        Output('top-10-purchases-graph', 'figure'),
+        Input('top-10-purchases-graph', 'relayoutData')
+    )
+    def update_top_10_graph(relayout_data):
+        fig = go.Figure(data=[go.Bar(
+            x=top_10_purchases['amount'],
+            y=top_10_purchases['description'],
+            orientation='h'
+        )])
+        fig.update_layout(
+            title='Top 10 Most Expensive Purchases',
+            yaxis={'categoryorder':'total ascending'},
+            xaxis_title='Amount',
+            yaxis_title='Description'
+        )
         return fig
 
     app.run_server(debug=True)
