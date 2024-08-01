@@ -39,14 +39,14 @@ def create_dashboard(data, top_10_purchases, monthly_top_5, monthly_top_5_catego
         dcc.Graph(id='monthly-total-graph'),
         dcc.Graph(id='top-10-purchases-graph'),
         html.Div(id='monthly-top-5-expenses'),
-        html.Div(id='monthly-top-5-categories')  # New div for top 5 categories
+        html.Div(id='monthly-top-5-categories')
     ])
 
     @app.callback(
         [Output('monthly-total-graph', 'figure'),
          Output('top-10-purchases-graph', 'figure'),
          Output('monthly-top-5-expenses', 'children'),
-         Output('monthly-top-5-categories', 'children')],  # New output for top 5 categories
+         Output('monthly-top-5-categories', 'children')],
         [Input('month-range-dropdown', 'value')]
     )
     def update_graphs(selected_months):
@@ -61,10 +61,29 @@ def create_dashboard(data, top_10_purchases, monthly_top_5, monthly_top_5_catego
             selected_monthly_top_5 = {k: v for k, v in monthly_top_5.items() if k in selected_months}
             selected_monthly_top_5_categories = {k: v for k, v in monthly_top_5_categories.items() if k in selected_months}
         
-        # Monthly total graph
-        monthly_fig = px.bar(filtered_data, x='month', y='total_amount', title='Total Amount by Month')
-        monthly_fig.update_traces(y=abs(filtered_data['total_amount']))
+        # Prepare data for the monthly total graph with category breakdown
+        monthly_category_data = []
+        for month, categories in selected_monthly_top_5_categories.items():
+            for _, row in categories.iterrows():
+                monthly_category_data.append({
+                    'month': pd.to_datetime(month),
+                    'category': row['category'],
+                    'amount': abs(row['amount'])  # Use absolute value for better visualization
+                })
+        
+        monthly_category_df = pd.DataFrame(monthly_category_data)
+        
+        # Monthly total graph with category breakdown
+        monthly_fig = px.bar(monthly_category_df, 
+                             x='month', 
+                             y='amount', 
+                             color='category',
+                             title='Total Amount by Month and Category',
+                             labels={'amount': 'Amount', 'month': 'Month'},
+                             hover_data=['category', 'amount'])
+        
         monthly_fig.update_xaxes(tickformat="%Y-%m")
+        monthly_fig.update_layout(barmode='stack')
         
         # Top 10 purchases graph
         top_10_fig = go.Figure()
@@ -85,7 +104,7 @@ def create_dashboard(data, top_10_purchases, monthly_top_5, monthly_top_5_catego
         
         # Generate monthly top 5 expenses charts
         monthly_top_5_charts = []
-        monthly_top_5_category_charts = []  # New list for category charts
+        monthly_top_5_category_charts = []
         sorted_months = sorted(selected_monthly_top_5.keys(), reverse=True)
         for month in sorted_months:
             # Top 5 expenses chart
