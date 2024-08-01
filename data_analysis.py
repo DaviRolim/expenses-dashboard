@@ -9,10 +9,11 @@ def analyze_report(file_path):
     file_path (str): Path to the CSV file.
     
     Returns:
-    tuple: (month, total_amount)
+    tuple: (year_month, total_amount)
     """
-    # Extract month from filename
-    month = os.path.splitext(os.path.basename(file_path))[0].split('_')[-1]
+    # Extract year and month from filename
+    filename = os.path.splitext(os.path.basename(file_path))[0]
+    year_month = '-'.join(filename.split('-')[1:3])  # Extract 'YYYY-MM'
     
     # Read the CSV file
     df = pd.read_csv(file_path)
@@ -20,7 +21,7 @@ def analyze_report(file_path):
     # Calculate total amount
     total_amount = df['amount'].sum()
     
-    return month, total_amount
+    return year_month, total_amount
 
 def analyze_all_reports(reports_dir):
     """
