@@ -34,20 +34,16 @@ def analyze_report(file_path):
     # Group by base_title only for installments
     def group_installments(group):
         if group['total_installments'].notnull().any():
-            return pd.Series({
-                'amount': group['amount'].sum(),
-                'date': group['date'].min(),
-                'current_installment': group['current_installment'].max(),
-                'total_installments': group['total_installments'].max(),
-                'title': f"{group['base_title'].iloc[0]} {group['current_installment'].max()}/{group['total_installments'].max()}"
+            return pd.DataFrame({
+                'date': [group['date'].min()],
+                'title': [f"{group['base_title'].iloc[0]} {group['current_installment'].max()}/{group['total_installments'].max()}"],
+                'amount': [group['amount'].sum()]
             })
         else:
-            return group.iloc[0]
+            return group[['date', 'title', 'amount']]
 
-    grouped = df.groupby('base_title').apply(group_installments).reset_index(drop=True)
-
-    # Keep only necessary columns
-    df = grouped[['date', 'title', 'amount']]
+    grouped = df.groupby('base_title', as_index=False).apply(group_installments)
+    df = grouped.reset_index(drop=True)
     
     # Calculate total amount
     total_amount = df['amount'].sum()
