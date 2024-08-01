@@ -47,7 +47,7 @@ def create_dashboard(data):
         
         fig.add_trace(go.Bar(
             x=top_10_purchases['amount'],
-            y=top_10_purchases['description'],
+            y=top_10_purchases['title'],
             text=top_10_purchases['date'].dt.strftime('%Y-%m-%d'),
             orientation='h'
         ))
