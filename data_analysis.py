@@ -42,7 +42,7 @@ def analyze_report(file_path):
         else:
             return group[['date', 'title', 'amount']]
 
-    grouped = df.groupby('base_title', as_index=False).apply(group_installments)
+    grouped = df.groupby('base_title', as_index=False, group_keys=True).apply(group_installments)
     df = grouped.reset_index(drop=True)
     
     # Calculate total amount
